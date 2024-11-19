@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+source $(dirname $0)/version
+
+cd $(dirname $0)/..
+
+mkdir -p bin
+if [ "$(uname)" = "Linux" ]; then
+    OTHER_LINKFLAGS="-extldflags -static -s"
+fi
+
+LINKFLAGS="-X github.com/Vicente-Cheng/mammuthus/pkg/version.Version=$VERSION
+           -X github.com/Vicente-Cheng/mammuthus/pkg/version.GitCommit=$COMMIT $LINKFLAGS"
+
+# only support amd64 now
+for arch in "amd64"; do
+    GOARCH="$arch" CGO_ENABLED=0 go build -ldflags "$LINKFLAGS $OTHER_LINKFLAGS" -o bin/mammuthus-controller-"$arch"
+done
