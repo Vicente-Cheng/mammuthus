@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "mammuthus-controller.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mammuthus-controller.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "mammuthus-controller.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "mammuthus-controller.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "mammuthus-controller.name" . }}
+      hostNetwork: true
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - mammuthus-controller
+        {{- if .Values.debug }}
+        - "--debug"
+        {{- end }}
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        ports:
+        - name: nfs
+          containerPort: 2049
+          protocol: TCP
+        - name: mountd
+          containerPort: 20048
+          protocol: TCP
+        - name: rpcbind
+          containerPort: 111
+          protocol: TCP
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /host/proc # To access dockerd/containerd mount namespace
+          name: host-proc
+          readOnly: true
+        - mountPath: /sys # To get host sysfs info
+          name: host-sys
+          readOnly: true
+        - mountPath: /var/run/dbus/system_bus_socket # To access dbus
+          name: dbus-socket
+          readOnly: true
+        resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: host-proc
+          hostPath:
+            path: /proc
+            type: Directory
+        - name: host-sys
+          hostPath:
+            path: /sys
+            type: Directory
+        - name: dbus-socket
+          hostPath:
+            path: /var/run/dbus/system_bus_socket
+            type: ""
