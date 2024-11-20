@@ -22,10 +22,16 @@ spec:
       name: ExportID
       type: string
     - jsonPath: .spec.exportPath
-      name: ExportPath
+      name: Path
       type: string
     - jsonPath: .spec.exportPseudoPath
-      name: ExportPseudoPath
+      name: PseudoPath
+      type: string
+    - jsonPath: .spec.nodeName
+      name: Node
+      type: string
+    - jsonPath: .status.exportStatus
+      name: Status
       type: string
     name: v1beta1
     schema:
@@ -53,6 +59,8 @@ spec:
             properties:
               accessType:
                 type: string
+              enabled:
+                type: boolean
               exportID:
                 type: integer
               exportPath:
@@ -60,30 +68,56 @@ spec:
               exportPseudoPath:
                 type: string
               fsal:
+                description: only VFS could skip the extra struct, because VFS did
+                  not have any extra fields
                 properties:
-                  vfs:
-                    properties:
-                      name:
-                        type: string
-                    required:
-                    - name
-                    type: object
+                  fsalType:
+                    type: string
+                required:
+                - fsalType
                 type: object
-              nodeID:
+              nodeName:
+                type: string
+              secType:
+                type: string
+              squash:
                 type: string
             required:
             - accessType
+            - enabled
             - exportID
             - exportPath
             - exportPseudoPath
-            - nodeID
+            - fsal
+            - nodeName
             type: object
           status:
             properties:
+              accessType:
+                type: string
               exportID:
                 type: integer
+              exportPath:
+                type: string
+              exportPseudoPath:
+                type: string
+              exportStatus:
+                type: string
+              fsal:
+                description: only VFS could skip the extra struct, because VFS did
+                  not have any extra fields
+                properties:
+                  fsalType:
+                    type: string
+                required:
+                - fsalType
+                type: object
+              secType:
+                type: string
+              squash:
+                type: string
             required:
-            - exportID
+            - exportStatus
             type: object
         required:
         - spec

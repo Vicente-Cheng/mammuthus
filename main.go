@@ -20,6 +20,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/Vicente-Cheng/mammuthus/pkg/controller/nfsexport"
+	"github.com/Vicente-Cheng/mammuthus/pkg/ganesha"
 	exportv1 "github.com/Vicente-Cheng/mammuthus/pkg/generated/controllers/freezeio.dev"
 	utils "github.com/Vicente-Cheng/mammuthus/pkg/utils"
 )
@@ -50,6 +51,12 @@ func main() {
 			EnvVars:     []string{"DEBUG"},
 			Usage:       "enable debug logs",
 			Destination: &opt.Debug,
+		},
+		&cli.StringFlag{
+			Name:        "node-name",
+			EnvVars:     []string{"NODE_NAME"},
+			Usage:       "Specify the node name",
+			Destination: &opt.NodeName,
 		},
 		&cli.StringFlag{
 			Name:        "namespace",
@@ -111,6 +118,10 @@ func run(opt *utils.Option) error {
 		}
 
 		<-ctx.Done()
+	}
+
+	if _, err := ganesha.RunNFSGanesha(); err != nil {
+		return fmt.Errorf("failed to run NFS-Ganesha: %v", err)
 	}
 
 	leader.RunOrDie(ctx, opt.Namespace, controllerName, client, cb)
