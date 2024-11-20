@@ -16,4 +16,5 @@ RUN if [ "$TARGETPLATFORM" != "linux/amd64" ] && [ "$TARGETPLATFORM" != "linux/a
 ENV ARCH=${TARGETPLATFORM#linux/}
 
 COPY bin/mammuthus-controller-${ARCH} /usr/bin/mammuthus-controller
+COPY package/ganesha.conf /etc/ganesha/ganesha.conf
 CMD ["mammuthus-controller"]

@@ -4,6 +4,8 @@ module github.com/Vicente-Cheng/mammuthus
 go 1.22.8
 
 require (
+	github.com/godbus/dbus/v5 v5.0.4
+	github.com/harvester/go-common v0.0.0-20240903083523-9576346cda75
 	github.com/rancher/lasso v0.0.0-20240924233157-8f384efc8813
 	github.com/rancher/wrangler/v3 v3.1.0
 	github.com/sirupsen/logrus v1.9.3
