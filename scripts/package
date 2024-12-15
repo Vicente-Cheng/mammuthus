@@ -5,7 +5,11 @@ source $(dirname $0)/version
 
 cd $(dirname $0)/..
 
-IMAGE=${REPO}/mammuthus-controller:${TAG}
+if [[ -v IMAGE ]]; then
+    echo "IMAGE is set to ${IMAGE}"
+else
+    IMAGE=${REPO}/mammuthus-controller:${TAG}
+fi
 DOCKERFILE=package/Dockerfile
 if [ -e ${DOCKERFILE}.${ARCH} ]; then
     DOCKERFILE=${DOCKERFILE}.${ARCH}

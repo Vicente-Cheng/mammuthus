@@ -1,0 +1,58 @@
+name: Pull Request Build
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+env:
+  IMAGE: "ttl.sh/mammuthus-controller-pr-${{ github.event.number }}:1h"
+
+jobs:
+  build-image-for-dev:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and Push Docker Image
+      run: |
+        make
+        docker push $IMAGE
+
+    - name: Install Helm
+      run: |
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+        chmod 700 get_helm.sh
+        ./get_helm.sh
+
+    - name: Install K3S
+      run: |
+        curl -sfL https://get.k3s.io | sh -
+
+    - name: Verify K3S
+      run: |
+        mkdir -p ~/.kube
+        sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+        sudo chown $USER:$USER ~/.kube/config
+        kubectl get nodes
+
+    - name: Deploy mammuthus-controller
+      run: |
+        cp -r deploy/charts /tmp/
+        yq e -i ".image.repository = \"ttl.sh/mammuthus-controller-pr-${{ github.event.number }}\"" /tmp/charts/values.yaml
+        yq e -i ".image.tag = \"1h\"" /tmp/charts/values.yaml
+        kubectl create ns freezeio-dev
+        helm install mammuthus-controller /tmp/charts/ -n freezeio-dev
+        sleep 15 # Wait for the pod to be created
+    
+    - name: Wait for mammuthus-controller to be ready
+      run: |
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=mammuthus-controller -n freezeio-dev --timeout=300s
+        if [ $? -eq 1 ]; then
+          echo "mammuthus-controller is not ready"
+          exit 1
+        fi

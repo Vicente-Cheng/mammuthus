@@ -22,7 +22,7 @@ RUN go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.15.0
 # install openapi-gen
 RUN  go install k8s.io/code-generator/cmd/openapi-gen@v0.23.7
 
-ENV DAPPER_ENV REPO TAG CROSS
+ENV DAPPER_ENV REPO TAG CROSS IMAGE
 ENV DAPPER_SOURCE /go/src/github.com/Vicente-Cheng/mammuthus
 ENV DAPPER_OUTPUT ./bin ./manifests
 ENV DAPPER_DOCKER_SOCKET true
