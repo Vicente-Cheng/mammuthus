@@ -1,14 +1,18 @@
-name: Pull Request Build
-
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
+  workflow_call:
+    inputs:
+      image-prefix:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
 
 env:
-  IMAGE: "ttl.sh/mammuthus-controller-pr-${{ github.event.number }}:1h"
+  IMAGE: ${{ inputs.image-prefix }}:${{ inputs.tag }}
 
 jobs:
-  build-image-for-dev:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,8 +47,8 @@ jobs:
     - name: Deploy mammuthus-controller
       run: |
         cp -r deploy/charts /tmp/
-        yq e -i ".image.repository = \"ttl.sh/mammuthus-controller-pr-${{ github.event.number }}\"" /tmp/charts/values.yaml
-        yq e -i ".image.tag = \"1h\"" /tmp/charts/values.yaml
+        yq e -i ".image.repository = \"${{ inputs.image-prefix }}\"" /tmp/charts/values.yaml
+        yq e -i ".image.tag = \"${{ inputs.tag }}\"" /tmp/charts/values.yaml
         kubectl create ns freezeio-dev
         helm install mammuthus-controller /tmp/charts/ -n freezeio-dev
         sleep 15 # Wait for the pod to be created
