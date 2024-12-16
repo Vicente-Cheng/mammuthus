@@ -1,11 +1,11 @@
-name: Pull Request Build and Test
+name: Daily Build Test
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
+  schedule:
+    - cron: "0 1 * * *"
 
 jobs:
-  Test-For-Dev:
+  Daily-Test:
     uses: ./.github/workflows/factory_test.yml
     with:
       image-prefix: ttl.sh/mammuthus-controller-pr-${{ github.event.number }}

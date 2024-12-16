@@ -6,8 +6,8 @@ on:
     - main
 
 jobs:
-  build-for-dev:
-    uses: ./.github/workflows/factory.yml
+  Build-For-Dev:
+    uses: ./.github/workflows/factory_build.yml
     with:
       tag: ${{ github.ref_name }}-head
       push: true
