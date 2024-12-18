@@ -49,8 +49,7 @@ jobs:
         cp -r deploy/charts /tmp/
         yq e -i ".image.repository = \"${{ inputs.image-prefix }}\"" /tmp/charts/values.yaml
         yq e -i ".image.tag = \"${{ inputs.tag }}\"" /tmp/charts/values.yaml
-        kubectl create ns freezeio-dev
-        helm install mammuthus-controller /tmp/charts/ -n freezeio-dev
+        helm install mammuthus-controller /tmp/charts/ -n freezeio-dev --create-namespace
         sleep 15 # Wait for the pod to be created
     
     - name: Wait for mammuthus-controller to be ready

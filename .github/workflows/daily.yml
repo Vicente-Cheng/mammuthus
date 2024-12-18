@@ -8,6 +8,6 @@ jobs:
   Daily-Test:
     uses: ./.github/workflows/factory_test.yml
     with:
-      image-prefix: ttl.sh/mammuthus-controller-pr-${{ github.event.number }}
+      image-prefix: ttl.sh/mammuthus-controller-daily
       tag: 1h
     secrets: inherit
