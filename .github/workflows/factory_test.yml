@@ -46,6 +46,7 @@ jobs:
 
     - name: Deploy mammuthus-controller
       run: |
+        mkdir -p /opt/ganesha
         cp -r deploy/charts /tmp/
         yq e -i ".image.repository = \"${{ inputs.image-prefix }}\"" /tmp/charts/values.yaml
         yq e -i ".image.tag = \"${{ inputs.tag }}\"" /tmp/charts/values.yaml
