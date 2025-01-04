@@ -42,3 +42,5 @@ affinity: {}
 
 # Enable debug logging
 debug: false
+
+ganesha_root: /opt/ganesha
