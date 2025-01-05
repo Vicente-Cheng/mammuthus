@@ -15,6 +15,8 @@ RUN if [ "$TARGETPLATFORM" != "linux/amd64" ] && [ "$TARGETPLATFORM" != "linux/a
 
 ENV ARCH=${TARGETPLATFORM#linux/}
 
+RUN mkdir -p /run/dbus
 COPY bin/mammuthus-controller-${ARCH} /usr/bin/mammuthus-controller
 COPY package/ganesha.conf /etc/ganesha/ganesha.conf
+COPY package/org.ganesha.nfsd.conf /etc/dbus-1/system.d/org.ganesha.nfsd.conf
 CMD ["mammuthus-controller"]

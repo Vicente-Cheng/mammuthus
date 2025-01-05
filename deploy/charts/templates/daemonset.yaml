@@ -58,9 +58,6 @@ spec:
         - mountPath: /sys # To get host sysfs info
           name: host-sys
           readOnly: true
-        - mountPath: /var/run/dbus/system_bus_socket # To access dbus
-          name: dbus-socket
-          readOnly: true
         {{- with .Values.ganesha_root }}
         - mountPath: /ganesha_root
           name: ganesha-root
@@ -88,14 +85,9 @@ spec:
           hostPath:
             path: /sys
             type: Directory
-        - name: dbus-socket
-          hostPath:
-            path: /var/run/dbus/system_bus_socket
-            type: ""
       {{- with .Values.ganesha_root }}
         - name: ganesha-root
           hostPath:
             path: {{ $.Values.ganesha_root }}
             type: Directory
-          type: Directory
       {{- end }}

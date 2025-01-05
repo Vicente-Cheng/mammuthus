@@ -42,3 +42,8 @@ func RunNFSGanesha() (string, error) {
 	args := []string{"-f", GaneshaDefaultConfig, "-p", GaneshaPID, "-L", LogTarget}
 	return executor.Execute(GaneshaCMD, args)
 }
+
+func RunDBus() (string, error) {
+	executor := cmd.NewExecutor()
+	return executor.Execute("dbus-daemon", []string{"--system"})
+}
