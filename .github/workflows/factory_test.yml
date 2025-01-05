@@ -22,6 +22,11 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    - name: Run Validation
+      run: |
+        make validate
+        make validate-ci
+
     - name: Build and Push Docker Image
       run: |
         make
@@ -41,15 +46,17 @@ jobs:
       run: |
         mkdir -p ~/.kube
         sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-        sudo chown $USER:$USER ~/.kube/config
-        kubectl get nodes
+        sudo chown $USER:$GROUP ~/.kube/config
+        NODENAME=$(kubectl get nodes -o name | awk -F'/' '{print $2}')
+        echo "NODENAME=$NODENAME" >> $GITHUB_ENV
 
     - name: Deploy mammuthus-controller
       run: |
-        mkdir -p /opt/ganesha
+        mkdir -p /tmp/ganesha
         cp -r deploy/charts /tmp/
         yq e -i ".image.repository = \"${{ inputs.image-prefix }}\"" /tmp/charts/values.yaml
         yq e -i ".image.tag = \"${{ inputs.tag }}\"" /tmp/charts/values.yaml
+        yq e -i ".ganesha_root = \"/tmp/ganesha\"" /tmp/charts/values.yaml
         helm install mammuthus-controller /tmp/charts/ -n freezeio-dev --create-namespace
         sleep 15 # Wait for the pod to be created
     
@@ -60,3 +67,47 @@ jobs:
           echo "mammuthus-controller is not ready"
           exit 1
         fi
+        echo "MAMMUTHUS_DEPLOYED=true" >> "$GITHUB_ENV"
+        kubectl get ds mammuthus-controller -n freezeio-dev -o yaml
+
+    - name: Add NFS export
+      run: |
+        yq e -i ".spec.enabled = true" example/export-sample.yaml
+        yq e -i ".spec.nodeName = \"$NODENAME\"" example/export-sample.yaml
+        cat example/export-sample.yaml
+        kubectl apply -f example/export-sample.yaml
+        sleep 5 # Wait for the export to be active
+
+    - name: Test Mount
+      run: |
+        sudo apt install nfs-common -y
+        sudo sed -i 's/^# Domain = localdomain/Domain = localdomain/' /etc/idmapd.conf
+        mkdir -p /tmp/mount-folder
+        sudo mount -t nfs localhost:/ganesha /tmp/mount-folder
+        ls -al /tmp
+        cat /proc/mounts |grep nfs
+        ls -al /tmp/mount-folder
+        stat /tmp/mount-folder
+        touch /tmp/mount-folder/hello.txt
+        echo "Hello, NFS!" > /tmp/mount-folder/hello.txt
+        cat /tmp/mount-folder/hello.txt
+        sudo umount /tmp/mount-folder
+
+    - name: run nfstest_posix
+      run: |
+        docker run --network host --privileged --rm registry.opensuse.org/home/vcheng/containers/containers/nfstester:latest nfstest_posix -s localhost -e ganesha || exit 0
+
+    - name: Get Logs
+      if: always()
+      run: |
+        if [ ${{ env.MAMMUTHUS_DEPLOYED }} != 'true' ]; then
+          echo "mammuthus controller is not deployed, skip getting logs"
+          exit 0
+        fi
+        podName=$(kubectl get pods -n freezeio-dev -l app.kubernetes.io/name=mammuthus-controller -o jsonpath='{.items[0].metadata.name}')
+
+        echo "========== mammuthus-controller logs =========="
+        kubectl logs $podName -n freezeio-dev
+
+        echo "========== nfsExports =========="
+        kubectl get nfsexports -o yaml

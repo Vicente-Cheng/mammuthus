@@ -1,0 +1,13 @@
+apiVersion: freezeio.dev/v1beta1
+kind: NFSExport
+metadata:
+  name: export-sample
+spec:
+  exportID: 1001
+  exportPath: /ganesha_root/
+  exportPseudoPath: /ganesha
+  nodeName: target-node
+  accessType: RW
+  fsal:
+    fsalType: vfs
+  enabled: false

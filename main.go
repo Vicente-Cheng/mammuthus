@@ -120,6 +120,10 @@ func run(opt *utils.Option) error {
 		<-ctx.Done()
 	}
 
+	if _, err := ganesha.RunDBus(); err != nil {
+		return fmt.Errorf("failed to run dbus: %v", err)
+	}
+
 	if _, err := ganesha.RunNFSGanesha(); err != nil {
 		return fmt.Errorf("failed to run NFS-Ganesha: %v", err)
 	}
