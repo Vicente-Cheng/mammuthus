@@ -50,8 +50,9 @@ func (c *Controller) OnNFSExportChange(_ string, nfsExport *nfsexportv1.NFSExpor
 		return nil, nil
 	}
 
-	if !nfsExport.Spec.Enabled {
-		logrus.Info("Skip this round because the nfs export is disabled")
+	// ExportID is 0 means the nfs export nevert applied.
+	if nfsExport.Status.ExportID == 0 && !nfsExport.Spec.Enabled {
+		logrus.Info("Skip this round because the nfs export is not enabled ever.")
 		return nil, nil
 	}
 
@@ -119,6 +120,12 @@ func (c *Controller) OnNFSExportRemove(_ string, nfsExport *nfsexportv1.NFSExpor
 		return nil, nil
 	}
 	logrus.Infof("Handling NFS Export %s delete event", nfsExport.Name)
+
+	// ExportID is 0 means the nfs export nevert applied.
+	if nfsExport.Status.ExportID == 0 {
+		logrus.Infof("Skip this round because the nfs export is not applied")
+		return nil, nil
+	}
 
 	if err := ganesha.RemoveExport(nfsExport.Spec.ExportID); err != nil {
 		logrus.Errorf("failed to remove export: %v", err)
