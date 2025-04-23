@@ -1,0 +1,3 @@
+[submodule "nfs-ganesha"]
+	path = nfs-ganesha
+	url = https://github.com/nfs-ganesha/nfs-ganesha
