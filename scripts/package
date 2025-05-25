@@ -5,6 +5,11 @@ source $(dirname $0)/version
 
 cd $(dirname $0)/..
 
+# update ganesha source
+pushd nfs-ganesha
+git submodule update --init --recursive
+popd
+
 if [[ -v IMAGE ]]; then
     echo "IMAGE is set to ${IMAGE}"
 else
