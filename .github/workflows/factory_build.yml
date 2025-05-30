@@ -38,6 +38,12 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
+    - name: Set up nfs-ganesha source
+      run: |
+        pushd nfs-ganesha
+        git submodule update --init --recursive
+        popd
+
     - name: Docker Build (Controller)
       uses: docker/build-push-action@v5
       with:
