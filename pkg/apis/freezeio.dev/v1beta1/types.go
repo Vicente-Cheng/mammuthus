@@ -17,14 +17,8 @@ const (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +kubebuilder:resource:shortName=nfsexport;nfsexports,scope=Namespaced
-// +kubebuilder:printcolumn:name="ExportID",type="string",JSONPath=`.spec.exportID`
-// +kubebuilder:printcolumn:name="Path",type="string",JSONPath=`.spec.exportPath`
-// +kubebuilder:printcolumn:name="PseudoPath",type="string",JSONPath=`.spec.exportPseudoPath`
-// +kubebuilder:printcolumn:name="Node",type="string",JSONPath=`.spec.nodeName`
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=`.status.exportStatus`
-// +kubebuilder:subresource:status
 
+// NFSExport is the schema for the nfsexports API
 type NFSExport struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -34,62 +28,39 @@ type NFSExport struct {
 
 // NFSExportSpec defines the desired state of NFSExport
 type NFSExportSpec struct {
-	// +kubebuilder:validation:Required
-	NodeName string `json:"nodeName"`
-
-	// +kubebuilder:validation:Required
-	ExportID int `json:"exportID"`
-
-	// +kubebuilder:validation:Required
-	ExportPath string `json:"exportPath"`
-
-	// +kubebuilder:validation:Required
+	NodeName         string `json:"nodeName"`
+	ExportID         int    `json:"exportID"`
+	ExportPath       string `json:"exportPath"`
 	ExportPseudoPath string `json:"exportPseudoPath"`
-
-	// +kubebuilder:validation:Required
-	AccessType string `json:"accessType"`
-
-	// +kubebuilder:validation:Optional
-	Squash string `json:"squash,omitempty"`
-
-	// +kubebuilder:validation:Optional
-	SecType string `json:"secType,omitempty"`
-
-	// +kubebuilder:validation:Required
-	Enabled bool `json:"enabled"`
-
-	// +kubebuilder:validation:Required
-	FSAL *FSAL `json:"fsal"`
+	AccessType       string `json:"accessType"`
+	Squash           string `json:"squash,omitempty"`
+	SecType          string `json:"secType,omitempty"`
+	Enabled          bool   `json:"enabled"`
+	FSAL             *FSAL  `json:"fsal"`
 }
 
-// only VFS could skip the extra struct, because VFS did not have any extra fields
+// FSAL defines the File System Abstraction Layer configuration
 type FSAL struct {
-	// +kubebuilder:validation:Required
 	FSALType string `json:"fsalType"`
 }
 
+// NFSExportStatus defines the observed state of NFSExport
 type NFSExportStatus struct {
-	// +kubebuilder:validation:Optional
-	ExportID int `json:"exportID,omitempty"`
+	ExportID         int          `json:"exportID,omitempty"`
+	ExportPath       string       `json:"exportPath,omitempty"`
+	ExportPseudoPath string       `json:"exportPseudoPath,omitempty"`
+	AccessType       string       `json:"accessType,omitempty"`
+	Squash           string       `json:"squash,omitempty"`
+	SecType          string       `json:"secType,omitempty"`
+	FSAL             *FSAL        `json:"fsal,omitempty"`
+	ExportStatus     ExportStatus `json:"exportStatus"`
+}
 
-	// +kubebuilder:validation:Optional
-	ExportPath string `json:"exportPath,omitempty"`
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-	// +kubebuilder:validation:Optional
-	ExportPseudoPath string `json:"exportPseudoPath,omitempty"`
-
-	// +kubebuilder:validation:Optional
-	AccessType string `json:"accessType,omitempty"`
-
-	// +kubebuilder:validation:Optional
-	Squash string `json:"squash,omitempty"`
-
-	// +kubebuilder:validation:Optional
-	SecType string `json:"secType,omitempty"`
-
-	// +kubebuilder:validation:Optional
-	FSAL *FSAL `json:"fsal,omitempty"`
-
-	// +kubebuilder:validation:Required
-	ExportStatus ExportStatus `json:"exportStatus"`
+// NFSExportList contains a list of NFSExport
+type NFSExportList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []NFSExport `json:"items"`
 }
