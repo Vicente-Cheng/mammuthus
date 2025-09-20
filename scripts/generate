@@ -1,0 +1,68 @@
+#!/bin/bash
+set -e
+
+source $(dirname $0)/version
+
+cd $(dirname $0)/..
+
+echo "Cleaning up existing generated code..."
+rm -rf pkg/client pkg/apis/freezeio.dev/v1beta1/zz_generated.deepcopy.go
+
+echo "Generating Kubernetes client code..."
+export GOFLAGS=-mod=mod
+
+# Use go run for tools when running in Dapper, or local binaries if available
+if command -v deepcopy-gen >/dev/null 2>&1; then
+    DEEPCOPY_GEN="deepcopy-gen"
+    CLIENT_GEN="client-gen"
+    LISTER_GEN="lister-gen"
+    INFORMER_GEN="informer-gen"
+else
+    DEEPCOPY_GEN="go run k8s.io/code-generator/cmd/deepcopy-gen"
+    CLIENT_GEN="go run k8s.io/code-generator/cmd/client-gen"
+    LISTER_GEN="go run k8s.io/code-generator/cmd/lister-gen"
+    INFORMER_GEN="go run k8s.io/code-generator/cmd/informer-gen"
+fi
+
+# Generate deepcopy functions
+echo "Generating deepcopy functions..."
+$DEEPCOPY_GEN \
+  --go-header-file hack/boilerplate.go.txt \
+  --bounding-dirs github.com/Vicente-Cheng/mammuthus/pkg/apis \
+  --output-file zz_generated.deepcopy.go \
+  github.com/Vicente-Cheng/mammuthus/pkg/apis/freezeio.dev/v1beta1
+
+# Generate clientset
+echo "Generating clientset..."
+$CLIENT_GEN \
+  --go-header-file hack/boilerplate.go.txt \
+  --clientset-name "versioned" \
+  --input-base github.com/Vicente-Cheng/mammuthus/pkg/apis \
+  --input "freezeio.dev/v1beta1" \
+  --output-dir pkg/client \
+  --output-pkg github.com/Vicente-Cheng/mammuthus/pkg/client/clientset
+
+# Generate listers
+echo "Generating listers..."
+$LISTER_GEN \
+  --go-header-file hack/boilerplate.go.txt \
+  --input-dirs github.com/Vicente-Cheng/mammuthus/pkg/apis/freezeio.dev/v1beta1 \
+  --output-dir pkg/client \
+  --output-pkg github.com/Vicente-Cheng/mammuthus/pkg/client/listers
+
+# Generate informers
+echo "Generating informers..."
+$INFORMER_GEN \
+  --go-header-file hack/boilerplate.go.txt \
+  --input-dirs github.com/Vicente-Cheng/mammuthus/pkg/apis/freezeio.dev/v1beta1 \
+  --versioned-clientset-package github.com/Vicente-Cheng/mammuthus/pkg/client/clientset/versioned \
+  --listers-package github.com/Vicente-Cheng/mammuthus/pkg/client/listers \
+  --output-dir pkg/client \
+  --output-pkg github.com/Vicente-Cheng/mammuthus/pkg/client/informers
+
+echo "Code generation completed successfully!"
+echo "Generated files:"
+echo "  - pkg/apis/freezeio.dev/v1beta1/zz_generated.deepcopy.go"
+echo "  - pkg/client/clientset/"
+echo "  - pkg/client/listers/"
+echo "  - pkg/client/informers/"
